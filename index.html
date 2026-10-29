@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PettyFlow - Office Petty Cash & Expense Management</title>
+  <meta name="description" content="A modern, high-performance financial web application for recording, tracking, and managing office petty cash expenses, employee reimbursements, and receipt attachments.">
+  
+  <!-- Inter Font from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar" id="appSidebar">
+      <div class="sidebar-header">
+        <div class="brand-wrapper">
+          <div class="brand-logo">
+            <i data-lucide="wallet-cards"></i>
+          </div>
+          <div class="brand-info">
+            <div class="brand-title">
+              PettyFlow
+            </div>
+            <div class="brand-subtitle">Office Petty Cash Manager</div>
+          </div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Main Menu</div>
+        <div class="nav-item active" data-view="dashboard" id="nav-dashboard">
+          <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span>
+          <span class="nav-text">Dashboard</span>
+        </div>
+        <div class="nav-item" data-view="add-expense" id="nav-add-expense">
+          <span class="nav-icon"><i data-lucide="plus-circle"></i></span>
+          <span class="nav-text">Add Expense</span>
+        </div>
+        <div class="nav-item" data-view="transactions" id="nav-transactions">
+          <span class="nav-icon"><i data-lucide="receipt-text"></i></span>
+          <span class="nav-text">All Transactions</span>
+          <span class="nav-badge" id="sidebar-tx-count">0</span>
+        </div>
+        <div class="nav-item" data-view="reimbursements" id="nav-reimbursements">
+          <span class="nav-icon"><i data-lucide="hand-coins"></i></span>
+          <span class="nav-text">Reimbursements</span>
+          <span class="nav-badge" id="sidebar-pending-badge">0</span>
+        </div>
+        
+        <div class="nav-section-title">Analytics & Tools</div>
+        <div class="nav-item" data-view="reports" id="nav-reports">
+          <span class="nav-icon"><i data-lucide="bar-chart-3"></i></span>
+          <span class="nav-text">Reports & Analytics</span>
+        </div>
+        <div class="nav-item" data-view="settings" id="nav-settings">
+          <span class="nav-icon"><i data-lucide="settings"></i></span>
+          <span class="nav-text">Settings</span>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile-compact" id="sidebarUserProfile" title="View Profile / Settings">
+          <div class="user-avatar" id="sidebarAvatar">YN</div>
+          <div class="user-details">
+            <span class="user-name" id="sidebarUserName">Your Name</span>
+            <span class="user-role" id="sidebarUserRole">Your Designation</span>
+          </div>
+          <i data-lucide="chevron-right" style="margin-left: auto; width: 16px; color: #64748b;"></i>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Application Wrapper -->
+    <main class="main-wrapper">
+      <!-- Top Navigation Bar -->
+      <header class="top-navbar">
+        <div class="navbar-left">
+          <button class="mobile-toggle-btn" id="sidebarToggleBtn" aria-label="Toggle Navigation Menu">
+            <i data-lucide="menu"></i>
+          </button>
+          <div class="header-brand-logo-wrap">
+            <img src="logo.png" alt="Eximius Power and Energy" class="header-brand-logo" onerror="this.onerror=null; this.src='logo.svg';">
+          </div>
+          <div class="breadcrumb-area">
+            <h1 class="current-page-title" id="pageTitleHeading">Dashboard Overview</h1>
+            <div class="breadcrumbs">
+              <span id="breadcrumbRoot">PettyFlow</span>
+              <span class="separator">/</span>
+              <span id="breadcrumbCurrent" style="color: var(--primary);">Dashboard</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="navbar-right">
+          <!-- Pending Claims Quick Pill -->
+          <div class="balance-pill" title="Total Pending Reimbursements Awaiting Payout">
+            <span class="dot"></span>
+            <span>Pending Claims:</span>
+            <strong class="tabular-nums" id="navBalanceDisplay">Rs. 0.00</strong>
+          </div>
+
+          <!-- Notification Bell -->
+          <button class="icon-btn-round" id="notificationBtn" title="System Notifications & Alerts">
+            <i data-lucide="bell"></i>
+            <span class="badge-dot" id="notificationBadge"></span>
+          </button>
+
+          <!-- System Limitations Info Button -->
+          <button class="icon-btn-round" id="sysInfoBtn" title="Architecture & Prototype Security Info">
+            <i data-lucide="shield-alert"></i>
+          </button>
+
+          <!-- Primary + Add Expense Button -->
+          <button class="action-btn-nav" id="topAddExpenseBtn">
+            <i data-lucide="plus"></i>
+            <span>Add Expense</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Content Views Container -->
+      <div class="content-area">
+
+        <!-- ==========================================
+             VIEW 1: DASHBOARD
+             ========================================== -->
+        <section class="view-section active" id="view-dashboard">
+          
+          <!-- Sample Data Banner (Hidden in Clean Mode) -->
+          <div class="alert-banner info-banner" id="sampleDataBanner" style="display: none;">
+            <div class="alert-content">
+              <i data-lucide="info" style="color: var(--primary); flex-shrink: 0;"></i>
+              <div>
+                <strong>Demonstration Mode Active:</strong> You are viewing realistic sample expense records (PickMe rides, fuel, office stationery, client tea).
+              </div>
+            </div>
+            <div class="alert-actions">
+              <button class="btn-secondary" id="clearSampleDataBtn" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;">Clear Sample Data</button>
+              <button class="btn-primary" id="restoreSampleDataBtn" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; display: none;">Reload Sample Records</button>
+            </div>
+          </div>
+
+          <!-- KPI Summary Cards Grid -->
+          <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+            <!-- 1. Total Expenses Recorded -->
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Total Expenses</span>
+                <div class="kpi-icon-wrapper blue">
+                  <i data-lucide="credit-card"></i>
+                </div>
+              </div>
+              <div class="kpi-value tabular-nums" id="kpiTotalExpenses">Rs. 0.00</div>
+              <div class="kpi-bottom">
+                <span class="kpi-meta-badge up" id="kpiTxCountBadge">0 records</span>
+                <span>all time recorded</span>
+              </div>
+            </div>
+
+            <!-- 2. Pending Reimbursement Amount -->
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Pending Reimbursements</span>
+                <div class="kpi-icon-wrapper amber">
+                  <i data-lucide="clock"></i>
+                </div>
+              </div>
+              <div class="kpi-value tabular-nums" id="kpiPendingReimbursement">Rs. 0.00</div>
+              <div class="kpi-bottom">
+                <span class="kpi-meta-badge neutral" id="kpiPendingCountBadge">0 claims</span>
+                <span>awaiting company payout</span>
+              </div>
+            </div>
+
+            <!-- 3. Total Reimbursed -->
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Total Reimbursed</span>
+                <div class="kpi-icon-wrapper teal">
+                  <i data-lucide="check-circle-2"></i>
+                </div>
+              </div>
+              <div class="kpi-value tabular-nums" id="kpiTotalReimbursed">Rs. 0.00</div>
+              <div class="kpi-bottom">
+                <span class="kpi-meta-badge up"><i data-lucide="badge-percent"></i> Settled</span>
+                <span>paid back to employees</span>
+              </div>
+            </div>
+
+            <!-- 4. Company-Paid Expenses -->
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Company Cash Expenses</span>
+                <div class="kpi-icon-wrapper indigo">
+                  <i data-lucide="building"></i>
+                </div>
+              </div>
+              <div class="kpi-value tabular-nums" id="kpiCompanyExpenses">Rs. 0.00</div>
+              <div class="kpi-bottom">
+                <span class="kpi-meta-badge neutral">Direct Office Cash</span>
+                <span>no reimbursement needed</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Action Buttons Bar -->
+          <div class="quick-actions-bar">
+            <div class="quick-action-btn" id="qaAddExpense">
+              <div class="quick-action-icon"><i data-lucide="plus-circle"></i></div>
+              <div class="quick-action-text">
+                <strong>Add New Expense</strong>
+                <span>Record a ride, meal, or fuel</span>
+              </div>
+            </div>
+            <div class="quick-action-btn" id="qaUploadReceipt">
+              <div class="quick-action-icon"><i data-lucide="file-up"></i></div>
+              <div class="quick-action-text">
+                <strong>Upload Receipt</strong>
+                <span>Attach screenshot or bill</span>
+              </div>
+            </div>
+            <div class="quick-action-btn" id="qaViewPending">
+              <div class="quick-action-icon"><i data-lucide="hourglass"></i></div>
+              <div class="quick-action-text">
+                <strong>Pending Claims</strong>
+                <span>Track approval & settlement</span>
+              </div>
+            </div>
+            <div class="quick-action-btn" id="qaExportReport">
+              <div class="quick-action-icon"><i data-lucide="download"></i></div>
+              <div class="quick-action-text">
+                <strong>Export Report</strong>
+                <span>Download CSV or print</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Row -->
+          <div class="charts-grid">
+            <!-- Expense Overview Chart with Periods -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <h2 class="card-title">Expense Trend Overview</h2>
+                  <span class="card-subtitle">Spending patterns and timeline</span>
+                </div>
+                <div class="card-tools">
+                  <div class="btn-pill-group" id="chartPeriodPills">
+                    <button class="btn-pill" data-period="7d">Last 7 Days</button>
+                    <button class="btn-pill active" data-period="1m">This Month</button>
+                    <button class="btn-pill" data-period="3m">Last 3 Months</button>
+                    <button class="btn-pill" data-period="1y">This Year</button>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="chart-container-tall">
+                  <canvas id="expenseTrendChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Category Breakdown Doughnut -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <h2 class="card-title">Expense by Category</h2>
+                  <span class="card-subtitle">Distribution across office budgets</span>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="chart-container-donut">
+                  <canvas id="categoryDonutChart"></canvas>
+                </div>
+                <div class="donut-legend-list" id="categoryLegendList">
+                  <!-- Populated dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Transactions Table Card -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <h2 class="card-title">Recent Transactions</h2>
+                <span class="card-subtitle">Latest recorded expenses and claims</span>
+              </div>
+              <button class="btn-secondary" id="dashViewAllTxBtn" style="padding: 0.35rem 0.85rem; font-size: 0.8rem;">
+                View All Transactions &rarr;
+              </button>
+            </div>
+            <div class="card-body" style="padding: 0;">
+              <div class="table-responsive desktop-table-view">
+                <table class="data-table" id="dashboardRecentTable">
+                  <thead>
+                    <tr>
+                      <th>Expense ID</th>
+                      <th>Date</th>
+                      <th>Description</th>
+                      <th>Category</th>
+                      <th>Amount</th>
+                      <th>Payment Method</th>
+                      <th>Status</th>
+                      <th>Receipt</th>
+                      <th style="text-align: right;">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboardRecentTbody">
+                    <!-- Dynamic Rows -->
+                  </tbody>
+                </table>
+              </div>
+              <!-- Mobile view for recent transactions -->
+              <div id="dashboardRecentMobileList" style="padding: 1rem; display: none;"></div>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ==========================================
+             VIEW 2: ADD / EDIT EXPENSE
+             ========================================== -->
+        <section class="view-section" id="view-add-expense">
+          <div class="form-layout-split">
+            <!-- Left Form Block -->
+            <div class="form-card">
+              <div class="form-section-title">
+                <i data-lucide="file-plus-2" style="color: var(--primary);"></i>
+                <span id="formCardHeaderTitle">Record New Office Expense</span>
+              </div>
+
+              <form id="expenseForm" autocomplete="off">
+                <input type="hidden" id="editExpenseId" value="">
+
+                <!-- Row 1: Date & Title -->
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label class="form-label" for="expenseDate">
+                      <span>Expense Date <span class="required-asterisk">*</span></span>
+                    </label>
+                    <input type="date" class="form-input" id="expenseDate" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="expenseTitle">
+                      <span>Expense Title <span class="required-asterisk">*</span></span>
+                      <span class="input-hint">Short summary</span>
+                    </label>
+                    <input type="text" class="form-input" id="expenseTitle" placeholder="e.g. PickMe ride to Colombo Court" required>
+                  </div>
+                </div>
+
+                <!-- Row 2: Category & Transport Provider -->
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label class="form-label" for="expenseCategory">
+                      <span>Category <span class="required-asterisk">*</span></span>
+                    </label>
+                    <select class="form-select" id="expenseCategory" required>
+                      <option value="">Select Category</option>
+                      <option value="Transport">Transport (PickMe / Uber / Taxi)</option>
+                      <option value="Fuel">Fuel (Petrol / Diesel)</option>
+                      <option value="Meals & Refreshments">Meals & Refreshments (Client/Team Tea)</option>
+                      <option value="Office Supplies">Office Supplies (Stationery, Paper)</option>
+                      <option value="Parking & Tolls">Parking & Highway Tolls</option>
+                      <option value="Accommodation">Accommodation</option>
+                      <option value="Communication">Communication & Courier</option>
+                      <option value="Equipment">Equipment & Minor IT Accessories</option>
+                      <option value="Other">Other Expenses</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="expenseVendor">
+                      <span>Vendor / Service Provider <span class="required-asterisk">*</span></span>
+                    </label>
+                    <input type="text" class="form-input" id="expenseVendor" placeholder="e.g. PickMe, Keells, Ceypetco, Sarasavi" required>
+                  </div>
+                </div>
+
+                <!-- Conditional Transport Box (PickMe vs Uber) -->
+                <div class="transport-provider-box" id="transportProviderBox">
+                  <label class="form-label">Select Ride / Transport Provider:</label>
+                  <div class="provider-options-grid">
+                    <div class="provider-radio-card active" data-provider="PickMe">
+                      <div class="provider-icon-badge pickme">PM</div>
+                      <span>PickMe Ride</span>
+                    </div>
+                    <div class="provider-radio-card" data-provider="Uber">
+                      <div class="provider-icon-badge uber">UB</div>
+                      <span>Uber Trip</span>
+                    </div>
+                    <div class="provider-radio-card" data-provider="Public Transport">
+                      <div class="provider-icon-badge other">BUS</div>
+                      <span>Bus / Train</span>
+                    </div>
+                    <div class="provider-radio-card" data-provider="Taxi / Tuk">
+                      <div class="provider-icon-badge other">TAXI</div>
+                      <span>Local Tuk / Taxi</span>
+                    </div>
+                  </div>
+                  <input type="hidden" id="selectedTransportProvider" value="PickMe">
+                  <p class="input-hint" style="margin-top: 0.5rem;">
+                    <i data-lucide="camera" style="width: 12px; vertical-align: middle;"></i>
+                    Tip: For PickMe & Uber trips, capture a screenshot of the trip fare breakdown or booking receipt.
+                  </p>
+                </div>
+
+                <!-- Row 3: Amount in LKR & Payment Method -->
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label class="form-label" for="expenseAmount">
+                      <span>Amount (LKR) <span class="required-asterisk">*</span></span>
+                      <span class="input-hint">Gross amount paid</span>
+                    </label>
+                    <div class="input-with-affix">
+                      <span class="input-affix-left">Rs.</span>
+                      <input type="number" step="0.01" min="1" class="form-input" id="expenseAmount" placeholder="0.00" required>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label" for="expensePaymentMethod">
+                      <span>Payment Method <span class="required-asterisk">*</span></span>
+                    </label>
+                    <select class="form-select" id="expensePaymentMethod" required>
+                      <option value="Personal Cash">Personal Cash (Requires Reimbursement)</option>
+                      <option value="Personal Debit/Credit Card">Personal Card (Requires Reimbursement)</option>
+                      <option value="PickMe">PickMe In-App / Linked Personal Card</option>
+                      <option value="Uber">Uber In-App / Linked Personal Card</option>
+                      <option value="Bank Transfer">Bank Transfer (Personal Account)</option>
+                      <option value="Company Cash">Company Cash (Paid from Petty Float - No Reimbursement)</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Row 4: Paid By & Reimbursement Status -->
+                <div class="form-grid-2">
+                  <div class="form-group">
+                    <label class="form-label" for="expensePaidBy">
+                      <span>Paid By (Employee Name) <span class="required-asterisk">*</span></span>
+                    </label>
+                    <input type="text" class="form-input" id="expensePaidBy" value="Your Name" placeholder="Your Name" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="expenseStatus">
+                      <span>Reimbursement Status</span>
+                    </label>
+                    <select class="form-select" id="expenseStatus">
+                      <option value="Pending">Pending (Draft / Not Submitted Yet)</option>
+                      <option value="Submitted">Submitted (Filed for Manager Review)</option>
+                      <option value="Approved">Approved (Awaiting Accounts Payout)</option>
+                      <option value="Reimbursed">Reimbursed (Paid Back to Employee)</option>
+                      <option value="Rejected">Rejected</option>
+                      <option value="Not Applicable">Not Applicable (Company-Paid)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Detailed Description -->
+                <div class="form-group">
+                  <label class="form-label" for="expenseDescription">
+                    <span>Detailed Business Purpose / Description <span class="required-asterisk">*</span></span>
+                  </label>
+                  <textarea class="form-textarea" id="expenseDescription" placeholder="Explain the official business reason for this expense..." required></textarea>
+                </div>
+
+                <!-- Notes -->
+                <div class="form-group">
+                  <label class="form-label" for="expenseNotes">
+                    <span>Optional Notes / Reference Number</span>
+                  </label>
+                  <input type="text" class="form-input" id="expenseNotes" placeholder="e.g. Receipt #88492, Project Code PRJ-COL-04">
+                </div>
+
+                <!-- Receipt & Screenshot Drag & Drop Box -->
+                <div class="form-group">
+                  <label class="form-label">
+                    <span>Receipt / Proof of Payment Attachments</span>
+                    <span style="display: flex; align-items: center; gap: 0.6rem;">
+                      <span class="input-hint">JPG, PNG, WebP, PDF (Max 5MB each)</span>
+                      <button type="button" class="btn-secondary" id="quickPrintAttachmentsBtn" style="padding: 0.2rem 0.55rem; font-size: 0.72rem; display: none;">
+                        <i data-lucide="printer" style="width: 12px; height: 12px;"></i> Print A4
+                      </button>
+                    </span>
+                  </label>
+                  
+                  <div class="dropzone-container" id="receiptDropzone">
+                    <input type="file" id="receiptFileInput" class="file-input-hidden" multiple accept="image/jpeg,image/png,image/webp,application/pdf">
+                    <div class="dropzone-content">
+                      <div class="dropzone-icon">
+                        <i data-lucide="upload-cloud"></i>
+                      </div>
+                      <div class="dropzone-title">Click to upload or drag & drop receipts</div>
+                      <div class="dropzone-hint">
+                        Invoices, PickMe/Uber trip screenshots, cash bill photos or PDF vouchers
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Attachment Thumbnail Cards -->
+                  <div class="attachment-preview-grid" id="attachmentPreviewContainer">
+                    <!-- Populated dynamically -->
+                  </div>
+                </div>
+
+                <!-- Actions Bar -->
+                <div class="form-actions-bar">
+                  <button type="button" class="btn-secondary" id="cancelExpenseFormBtn">Cancel</button>
+                  <button type="button" class="btn-secondary" id="printReceiptsA4Btn" title="Fit uploaded receipts properly on an A4 sheet and print">
+                    <i data-lucide="printer"></i>
+                    <span>Print Receipts (A4)</span>
+                  </button>
+                  <button type="button" class="btn-primary-alt" id="saveAndAddAnotherBtn">Save & Add Another</button>
+                  <button type="submit" class="btn-primary" id="saveExpenseBtn">
+                    <i data-lucide="check"></i>
+                    <span>Save Expense Record</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Right Live Preview Voucher Card -->
+            <div class="live-preview-card">
+              <div class="preview-voucher-header">
+                <div class="preview-voucher-title">Live Voucher Preview</div>
+                <div class="preview-amount-big tabular-nums" id="livePreviewAmount">Rs. 0.00</div>
+                <span class="status-badge pending" id="livePreviewBadge">
+                  <span class="badge-circle"></span>
+                  <span id="livePreviewBadgeText">Pending Claim</span>
+                </span>
+              </div>
+
+              <div class="preview-item-row">
+                <span class="preview-item-label">Expense ID:</span>
+                <span class="preview-item-value" id="livePreviewId">EXP-NEW</span>
+              </div>
+              <div class="preview-item-row">
+                <span class="preview-item-label">Date:</span>
+                <span class="preview-item-value" id="livePreviewDate">-</span>
+              </div>
+              <div class="preview-item-row">
+                <span class="preview-item-label">Title:</span>
+                <span class="preview-item-value" id="livePreviewTitle">Untitled Expense</span>
+              </div>
+              <div class="preview-item-row">
+                <span class="preview-item-label">Category:</span>
+                <span class="preview-item-value" id="livePreviewCategory">General</span>
+              </div>
+              <div class="preview-item-row">
+                <span class="preview-item-label">Vendor:</span>
+                <span class="preview-item-value" id="livePreviewVendor">Not specified</span>
+              </div>
+              <div class="preview-item-row">
+                <span class="preview-item-label">Paid By:</span>
+                <span class="preview-item-value" id="livePreviewPaidBy">Your Name</span>
+              </div>
+              <div class="preview-item-row">
+                <span class="preview-item-label">Payment Method:</span>
+                <span class="preview-item-value" id="livePreviewMethod">Personal Cash</span>
+              </div>
+              <div class="preview-item-row">
+                <span class="preview-item-label">Receipts Attached:</span>
+                <span class="preview-item-value" id="livePreviewAttachmentCount">0 files</span>
+              </div>
+
+              <div class="reimbursement-callout personal" id="livePreviewCallout">
+                <i data-lucide="alert-circle" style="width: 14px; vertical-align: middle; margin-right: 2px;"></i>
+                <strong>Personal Out-of-Pocket Expense:</strong> This will be automatically added to your reimbursement claim queue.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VIEW 3: ALL TRANSACTIONS
+             ========================================== -->
+        <section class="view-section" id="view-transactions">
+          
+          <!-- Filter Toolbar -->
+          <div class="filter-toolbar">
+            <div class="toolbar-top">
+              <div class="search-input-wrapper">
+                <i data-lucide="search" class="search-icon-pos"></i>
+                <input type="text" id="txSearchInput" placeholder="Search by ID, title, vendor, description, or amount...">
+              </div>
+              <div class="toolbar-actions">
+                <button class="btn-secondary" id="txResetFiltersBtn" title="Reset all search filters">
+                  <i data-lucide="rotate-ccw"></i> Reset
+                </button>
+                <button class="btn-secondary" id="txExportCsvBtn">
+                  <i data-lucide="download"></i> Export CSV
+                </button>
+                <button class="btn-primary" id="txAddNewBtn">
+                  <i data-lucide="plus"></i> Add Expense
+                </button>
+              </div>
+            </div>
+
+            <!-- Multi Filter Row -->
+            <div class="filter-grid">
+              <div class="filter-control">
+                <label>Date From</label>
+                <input type="date" class="form-input" id="txFilterDateFrom">
+              </div>
+              <div class="filter-control">
+                <label>Date To</label>
+                <input type="date" class="form-input" id="txFilterDateTo">
+              </div>
+              <div class="filter-control">
+                <label>Category</label>
+                <select class="form-select" id="txFilterCategory">
+                  <option value="ALL">All Categories</option>
+                  <option value="Transport">Transport</option>
+                  <option value="Fuel">Fuel</option>
+                  <option value="Meals & Refreshments">Meals & Refreshments</option>
+                  <option value="Office Supplies">Office Supplies</option>
+                  <option value="Parking & Tolls">Parking & Tolls</option>
+                  <option value="Accommodation">Accommodation</option>
+                  <option value="Communication">Communication</option>
+                  <option value="Equipment">Equipment</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="filter-control">
+                <label>Payment Method</label>
+                <select class="form-select" id="txFilterPaymentMethod">
+                  <option value="ALL">All Methods</option>
+                  <option value="Personal Cash">Personal Cash</option>
+                  <option value="Personal Debit/Credit Card">Personal Card</option>
+                  <option value="PickMe">PickMe</option>
+                  <option value="Uber">Uber</option>
+                  <option value="Company Cash">Company Cash</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                </select>
+              </div>
+              <div class="filter-control">
+                <label>Reimbursement</label>
+                <select class="form-select" id="txFilterStatus">
+                  <option value="ALL">All Statuses</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Submitted">Submitted</option>
+                  <option value="Approved">Approved</option>
+                  <option value="Reimbursed">Reimbursed</option>
+                  <option value="Rejected">Rejected</option>
+                  <option value="Not Applicable">Not Applicable</option>
+                </select>
+              </div>
+              <div class="filter-control">
+                <label>Sort By</label>
+                <select class="form-select" id="txSortBy">
+                  <option value="date-desc">Date (Newest First)</option>
+                  <option value="date-asc">Date (Oldest First)</option>
+                  <option value="amount-desc">Amount (Highest First)</option>
+                  <option value="amount-asc">Amount (Lowest First)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Transactions Main Table Card -->
+          <div class="card">
+            <div class="table-responsive desktop-table-view">
+              <table class="data-table" id="allTxTable">
+                <thead>
+                  <tr>
+                    <th>Expense ID</th>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Vendor</th>
+                    <th>Category</th>
+                    <th>Payment Method</th>
+                    <th>Amount (LKR)</th>
+                    <th>Status</th>
+                    <th>Receipt</th>
+                    <th style="text-align: right;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="allTxTbody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Mobile Transaction Cards Container -->
+            <div id="allTxMobileContainer" class="mobile-transaction-card-list" style="padding: 1rem; display: none;"></div>
+
+            <!-- Empty State for Transactions -->
+            <div class="empty-state" id="txEmptyState" style="display: none;">
+              <div class="empty-state-icon"><i data-lucide="inbox"></i></div>
+              <h3 class="empty-state-title">No transactions match your search</h3>
+              <p class="empty-state-desc">Try clearing your search query or adjusting your filters to find records.</p>
+              <button class="btn-secondary" id="txClearFiltersEmptyBtn">Clear All Filters</button>
+            </div>
+
+            <!-- Pagination Bar -->
+            <div class="pagination-wrapper">
+              <div id="txPaginationSummary">Showing 1 to 10 of 10 entries</div>
+              <div class="pagination-controls" id="txPaginationButtons">
+                <!-- Page buttons -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VIEW 4: REIMBURSEMENTS WORKFLOW
+             ========================================== -->
+        <section class="view-section" id="view-reimbursements">
+          <!-- Reimbursements Summary Cards -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Awaiting Submission</span>
+                <div class="kpi-icon-wrapper amber"><i data-lucide="file-question"></i></div>
+              </div>
+              <div class="kpi-value tabular-nums" id="reimbKpiDraft">Rs. 0.00</div>
+              <div class="kpi-bottom">
+                <span class="kpi-meta-badge neutral" id="reimbKpiDraftCount">0 items</span>
+                <span>Personal expenses not yet filed</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Submitted for Approval</span>
+                <div class="kpi-icon-wrapper blue"><i data-lucide="send"></i></div>
+              </div>
+              <div class="kpi-value tabular-nums" id="reimbKpiSubmitted">Rs. 0.00</div>
+              <div class="kpi-bottom">
+                <span class="kpi-meta-badge neutral" id="reimbKpiSubmittedCount">0 claims</span>
+                <span>Pending manager approval</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Approved (Awaiting Payout)</span>
+                <div class="kpi-icon-wrapper indigo"><i data-lucide="badge-check"></i></div>
+              </div>
+              <div class="kpi-value tabular-nums" id="reimbKpiApproved">Rs. 0.00</div>
+              <div class="kpi-bottom">
+                <span class="kpi-meta-badge neutral" id="reimbKpiApprovedCount">0 approved</span>
+                <span>Ready for accounts settlement</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label">Total Reimbursed</span>
+                <div class="kpi-icon-wrapper teal"><i data-lucide="wallet"></i></div>
+              </div>
+              <div class="kpi-value tabular-nums" id="reimbKpiPaid">Rs. 0.00</div>
+              <div class="kpi-bottom">
+                <span class="kpi-meta-badge up" id="reimbKpiPaidCount">0 settled</span>
+                <span>Funds paid back to employee</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reimbursement Filter Tabs -->
+          <div class="reimburse-tabs">
+            <button class="reimburse-tab-btn active" data-tab="ALL">
+              All Employee Claims <span class="tab-badge" id="reimbTabBadgeAll">0</span>
+            </button>
+            <button class="reimburse-tab-btn" data-tab="Pending">
+              Pending Drafts <span class="tab-badge" id="reimbTabBadgePending">0</span>
+            </button>
+            <button class="reimburse-tab-btn" data-tab="Submitted">
+              Submitted <span class="tab-badge" id="reimbTabBadgeSubmitted">0</span>
+            </button>
+            <button class="reimburse-tab-btn" data-tab="Approved">
+              Approved <span class="tab-badge" id="reimbTabBadgeApproved">0</span>
+            </button>
+            <button class="reimburse-tab-btn" data-tab="Reimbursed">
+              Reimbursed <span class="tab-badge" id="reimbTabBadgeReimbursed">0</span>
+            </button>
+          </div>
+
+          <!-- Claims Card List -->
+          <div id="reimbursementClaimsList">
+            <!-- Dynamic Claim Cards -->
+          </div>
+
+          <!-- Empty Claims State -->
+          <div class="empty-state" id="reimbursementEmptyState" style="display: none;">
+            <div class="empty-state-icon"><i data-lucide="check-check"></i></div>
+            <h3 class="empty-state-title">No reimbursement claims in this tab</h3>
+            <p class="empty-state-desc">All caught up! Any expenses you pay with personal cash or cards will appear here.</p>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VIEW 5: REPORTS & ANALYTICS
+             ========================================== -->
+        <section class="view-section" id="view-reports">
+          <!-- Report Header Toolbar -->
+          <div class="filter-toolbar no-print">
+            <div class="toolbar-top">
+              <div>
+                <h2 style="font-size: 1.15rem; font-weight: 700;">Financial Reports & Expense Analytics</h2>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Audit-ready summaries, department breakdown, and transport comparisons</span>
+              </div>
+              <div class="toolbar-actions">
+                <button class="btn-secondary" id="printReportBtn">
+                  <i data-lucide="printer"></i> Print Expense Statement
+                </button>
+                <button class="btn-primary" id="exportReportCsvBtn">
+                  <i data-lucide="file-spreadsheet"></i> Export Full CSV
+                </button>
+              </div>
+            </div>
+            
+            <div class="filter-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+              <div class="filter-control">
+                <label>Report Timeframe</label>
+                <select class="form-select" id="reportTimeframeSelect">
+                  <option value="ALL">All Recorded Dates</option>
+                  <option value="THIS_MONTH" selected>This Current Month</option>
+                  <option value="LAST_MONTH">Last Month</option>
+                  <option value="THIS_YEAR">This Year (2026)</option>
+                  <option value="CUSTOM">Custom Range</option>
+                </select>
+              </div>
+              <div class="filter-control" id="reportCustomRangeContainer" style="display: none;">
+                <label>Custom Date Range</label>
+                <div style="display: flex; gap: 0.5rem;">
+                  <input type="date" class="form-input" id="reportDateFrom">
+                  <input type="date" class="form-input" id="reportDateTo">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Report Top Analytics Grid -->
+          <div class="report-grid-top no-print">
+            <!-- Transport Comparison Widget (PickMe vs Uber vs Others) -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <h3 class="card-title">Ride-Hailing & Transport Comparison</h3>
+                  <span class="card-subtitle">PickMe vs. Uber vs. Other transit</span>
+                </div>
+                <div class="kpi-icon-wrapper blue" style="width: 32px; height: 32px;"><i data-lucide="car"></i></div>
+              </div>
+              <div class="card-body transport-comparison-card">
+                <!-- PickMe Row -->
+                <div class="comparison-bar-row">
+                  <div class="comparison-label-row">
+                    <span style="display: flex; align-items: center; gap: 0.4rem;">
+                      <span class="provider-icon-badge pickme" style="width: 20px; height: 20px; font-size: 0.65rem;">PM</span>
+                      PickMe Rides
+                    </span>
+                    <span class="tabular-nums" id="reportPickMeTotal">Rs. 0.00 (0%)</span>
+                  </div>
+                  <div class="progress-track">
+                    <div class="progress-fill pickme" id="reportPickMeBar" style="width: 0%;"></div>
+                  </div>
+                </div>
+
+                <!-- Uber Row -->
+                <div class="comparison-bar-row">
+                  <div class="comparison-label-row">
+                    <span style="display: flex; align-items: center; gap: 0.4rem;">
+                      <span class="provider-icon-badge uber" style="width: 20px; height: 20px; font-size: 0.65rem;">UB</span>
+                      Uber Trips
+                    </span>
+                    <span class="tabular-nums" id="reportUberTotal">Rs. 0.00 (0%)</span>
+                  </div>
+                  <div class="progress-track">
+                    <div class="progress-fill uber" id="reportUberBar" style="width: 0%;"></div>
+                  </div>
+                </div>
+
+                <!-- Other Transit -->
+                <div class="comparison-bar-row">
+                  <div class="comparison-label-row">
+                    <span style="display: flex; align-items: center; gap: 0.4rem;">
+                      <span class="provider-icon-badge other" style="width: 20px; height: 20px; font-size: 0.65rem;">TX</span>
+                      Tuk, Fuel & Public Transit
+                    </span>
+                    <span class="tabular-nums" id="reportOtherTransitTotal">Rs. 0.00 (0%)</span>
+                  </div>
+                  <div class="progress-track">
+                    <div class="progress-fill other" id="reportOtherTransitBar" style="width: 0%;"></div>
+                  </div>
+                </div>
+
+                <div class="reimbursement-callout" style="background-color: #f8fafc; border: 1px solid var(--border-main); margin-top: 0.5rem;">
+                  <strong>Transport Cost Optimization:</strong> PickMe and Uber rides require attached trip receipts showing the pickup/drop locations and fare breakdown for verification.
+                </div>
+              </div>
+            </div>
+
+            <!-- Payment Allocation Widget (Personal vs Company Cash) -->
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <h3 class="card-title">Payment Source Distribution</h3>
+                  <span class="card-subtitle">Personal Out-of-Pocket vs Direct Company Float</span>
+                </div>
+                <div class="kpi-icon-wrapper teal" style="width: 32px; height: 32px;"><i data-lucide="scale"></i></div>
+              </div>
+              <div class="card-body">
+                <div style="height: 200px; position: relative;">
+                  <canvas id="paymentSourceChart"></canvas>
+                </div>
+                <div class="preview-item-row" style="margin-top: 1rem;">
+                  <span class="preview-item-label">Personal Employee Spending:</span>
+                  <strong class="tabular-nums" id="reportPersonalTotal">Rs. 0.00</strong>
+                </div>
+                <div class="preview-item-row">
+                  <span class="preview-item-label">Direct Company Cash Spending:</span>
+                  <strong class="tabular-nums" id="reportCompanyTotal">Rs. 0.00</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Printable Formal Statement of Expenses (Also visible on screen) -->
+          <div class="printable-report-wrapper" id="printableReportArea">
+            <div class="report-header-print">
+              <div class="report-title-block">
+                <h2 id="reportPrintCompanyName">Eximius Power And Energy (Pvt) Ltd</h2>
+                <p>Office Petty Cash & Employee Expense Claim Statement</p>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                  Employee: <strong id="reportPrintEmployeeName">Your Name</strong> | Role: <span id="reportPrintRole">Your Designation</span>
+                </div>
+              </div>
+              <div class="report-meta-block">
+                <div><strong>Statement Date:</strong> <span id="reportPrintDate">2026-10-29</span></div>
+                <div><strong>Currency:</strong> LKR (Rs.)</div>
+                <div><strong>Report Period:</strong> <span id="reportPrintPeriod">Selected Range</span></div>
+              </div>
+            </div>
+
+            <!-- Summary Table for Print -->
+            <div class="table-responsive">
+              <table class="data-table" id="reportPrintTable">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Vendor</th>
+                    <th>Category</th>
+                    <th>Payment Method</th>
+                    <th>Status</th>
+                    <th style="text-align: right;">Amount (LKR)</th>
+                  </tr>
+                </thead>
+                <tbody id="reportPrintTbody">
+                  <!-- Generated dynamically -->
+                </tbody>
+                <tfoot>
+                  <tr style="background-color: #f8fafc; font-weight: 700;">
+                    <td colspan="7" style="text-align: right; padding: 1rem;">TOTAL EXPENSES:</td>
+                    <td style="text-align: right; padding: 1rem;" class="tabular-nums" id="reportPrintTotalAmount">Rs. 0.00</td>
+                  </tr>
+                  <tr style="background-color: #fff; font-weight: 600; color: var(--warning-text);">
+                    <td colspan="7" style="text-align: right; padding: 0.5rem 1rem;">TOTAL PENDING REIMBURSEMENT:</td>
+                    <td style="text-align: right; padding: 0.5rem 1rem;" class="tabular-nums" id="reportPrintPendingAmount">Rs. 0.00</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <!-- Signatures Section for Accounting / Physical Sign-off -->
+            <div class="report-signatures">
+              <div class="signature-box">
+                <div class="sig-line"></div>
+                <span class="sig-label">Claimant Employee Signature</span>
+              </div>
+              <div class="signature-box">
+                <div class="sig-line"></div>
+                <span class="sig-label">Department Head Approval</span>
+              </div>
+              <div class="signature-box">
+                <div class="sig-line"></div>
+                <span class="sig-label">Finance / Petty Cash Custodian</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VIEW 6: SETTINGS
+             ========================================== -->
+        <section class="view-section" id="view-settings">
+          <div class="settings-grid">
+            
+            <!-- Company & Profile Config -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <h3 class="settings-card-title">Company & Employee Profile</h3>
+                <p class="settings-card-desc">Defaults used in expense reports and vouchers</p>
+              </div>
+              <form id="settingsProfileForm">
+                <div class="form-group">
+                  <label class="form-label" for="settingCompanyName">Company / Entity Name</label>
+                  <input type="text" class="form-input" id="settingCompanyName" value="Eximius Power And Energy (Pvt) Ltd" placeholder="Eximius Power And Energy (Pvt) Ltd" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="settingEmployeeName">Employee Full Name</label>
+                  <input type="text" class="form-input" id="settingEmployeeName" value="Your Name" placeholder="Your Name" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="settingEmployeeRole">Designation / Role</label>
+                  <input type="text" class="form-input" id="settingEmployeeRole" value="Your Designation" placeholder="Your Designation" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="settingCurrency">Default Currency</label>
+                  <input type="text" class="form-input" id="settingCurrency" value="LKR" readonly style="background-color: #f1f5f9;">
+                </div>
+                <button type="submit" class="btn-primary" style="margin-top: 0.5rem;">Save Profile Settings</button>
+              </form>
+            </div>
+
+
+            <!-- Backup & Data Persistence -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <h3 class="settings-card-title">Data Backup & Migration</h3>
+                <p class="settings-card-desc">Export your records to JSON or import from another device</p>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <p style="font-size: 0.8rem; color: var(--text-muted);">
+                  Download a complete JSON snapshot of all your expense records, receipts metadata, and customized settings.
+                </p>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                  <button class="btn-secondary" id="exportDataJsonBtn">
+                    <i data-lucide="download"></i> Export Data Backup (JSON)
+                  </button>
+                  <label class="btn-secondary" style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <i data-lucide="upload"></i> Import Backup (JSON)
+                    <input type="file" id="importJsonFileInput" accept="application/json" style="display: none;">
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Danger Zone / Data Management -->
+            <div class="settings-card danger-zone">
+              <div class="settings-card-header">
+                <h3 class="settings-card-title">Data Management & Reset</h3>
+                <p class="settings-card-desc">Clear demo data or perform a full factory reset</p>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <p style="font-size: 0.8rem; color: var(--danger-text);">
+                  Be cautious: Clearing data removes stored records from this browser's local cache.
+                </p>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                  <button class="btn-secondary" id="settingsClearDemoBtn" style="color: var(--warning-text); border-color: var(--warning-border);">
+                    <i data-lucide="trash"></i> Clear Sample Records
+                  </button>
+                  <button class="btn-secondary" id="settingsResetAllBtn" style="color: var(--danger); border-color: var(--danger-border);">
+                    <i data-lucide="alert-triangle"></i> Factory Reset Application
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Architecture & Prototype Limitations Note Card -->
+          <div class="alert-banner warning-banner" style="margin-top: 2rem;">
+            <div class="alert-content">
+              <i data-lucide="shield-alert" style="flex-shrink: 0; width: 24px; height: 24px;"></i>
+              <div>
+                <strong>Prototype Architecture & Multi-User Limitations:</strong>
+                This application runs client-side using browser <code style="background: rgba(0,0,0,0.06); padding: 2px 4px; border-radius: 4px;">localStorage</code> and <code style="background: rgba(0,0,0,0.06); padding: 2px 4px; border-radius: 4px;">IndexedDB</code>. Records are private to this browser and not automatically synced across other employees' machines. Clearing browser data will remove unsaved records. For company-wide multi-user deployment, an authenticated backend server (e.g. Node/Go/Python) with encrypted database and S3 receipt storage is required.
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ==========================================
+       MODALS & OVERLAYS
+       ========================================== -->
+
+  <!-- 1. Transaction Details Modal -->
+  <div class="modal-overlay" id="txDetailsModal">
+    <div class="modal-box large">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span class="expense-id-cell" id="modalDetailExpenseId">EXP-2026-001</span>
+          <h3 class="modal-title" id="modalDetailTitle">Transaction Details</h3>
+        </div>
+        <button class="modal-close-btn" id="closeTxDetailModalBtn" aria-label="Close modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body" id="modalDetailBody">
+        <!-- Dynamic Content Injected by JS -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="modalPrintSlipBtn">
+          <i data-lucide="printer"></i> Print Receipts (A4)
+        </button>
+        <button class="btn-secondary" id="modalEditBtn">
+          <i data-lucide="edit-3"></i> Edit Record
+        </button>
+        <button class="btn-secondary" id="modalDeleteBtn" style="color: var(--danger); border-color: var(--danger-border);">
+          <i data-lucide="trash-2"></i> Delete
+        </button>
+        <button class="btn-primary" id="modalCloseActionBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Fullscreen Receipt Lightbox Modal -->
+  <div class="modal-overlay" id="receiptLightboxModal">
+    <div class="modal-box large" style="max-width: 900px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="lightboxTitle">Receipt Preview</h3>
+        <button class="modal-close-btn" id="closeLightboxBtn" aria-label="Close modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body" style="text-align: center; background-color: #0f172a; padding: 2rem;">
+        <img id="lightboxImage" src="" alt="Receipt proof" class="receipt-lightbox-image" style="display: none;">
+        <div id="lightboxPdfViewer" style="display: none; color: #fff; padding: 2rem;">
+          <i data-lucide="file-text" style="width: 64px; height: 64px; color: #60a5fa; margin-bottom: 1rem;"></i>
+          <h4 id="lightboxPdfName" style="font-size: 1.1rem; margin-bottom: 0.5rem;">Document.pdf</h4>
+          <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 1.5rem;">PDF Document attached to this transaction.</p>
+          <a id="lightboxPdfDownloadBtn" href="#" download class="btn-primary" style="display: inline-flex;">
+            <i data-lucide="download"></i> Download / Open PDF
+          </a>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <span id="lightboxFileInfo" style="margin-right: auto; font-size: 0.8rem; color: var(--text-muted);"></span>
+        <button class="btn-secondary" id="lightboxDownloadBtn"><i data-lucide="download"></i> Save Image</button>
+        <button class="btn-primary" id="lightboxCloseBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Status Advance & Settlement Modal -->
+  <div class="modal-overlay" id="statusModal">
+    <div class="modal-box" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Update Reimbursement Status</h3>
+        <button class="modal-close-btn" id="closeStatusModalBtn" aria-label="Close modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <form id="statusUpdateForm">
+        <div class="modal-body">
+          <input type="hidden" id="statusModalTxId">
+          <div class="form-group">
+            <label class="form-label">New Status</label>
+            <select class="form-select" id="statusModalSelect" required>
+              <option value="Submitted">Mark as Submitted (Send for Approval)</option>
+              <option value="Approved">Mark as Approved (Authorize Payment)</option>
+              <option value="Reimbursed">Mark as Reimbursed (Settled & Paid)</option>
+              <option value="Rejected">Mark as Rejected</option>
+              <option value="Pending">Revert to Pending Draft</option>
+            </select>
+          </div>
+          <div class="form-group" id="statusModalDateGroup">
+            <label class="form-label">Action / Settlement Date</label>
+            <input type="date" class="form-input" id="statusModalDate">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notes / Cheque or Transfer Reference</label>
+            <textarea class="form-textarea" id="statusModalNotes" placeholder="e.g. Paid via online transfer Ref #TRX9921 or Petty Cash Voucher #12"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="statusModalCancelBtn">Cancel</button>
+          <button type="submit" class="btn-primary">Confirm Status Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. Confirmation Dialog Modal -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="confirmModalTitle">Please Confirm</h3>
+        <button class="modal-close-btn" id="closeConfirmModalBtn" aria-label="Close modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmModalMessage" style="font-size: 0.9rem; color: var(--text-muted);">
+          Are you sure you want to proceed with this action?
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="confirmModalCancelBtn">Cancel</button>
+        <button type="button" class="btn-primary" id="confirmModalConfirmBtn" style="background-color: var(--danger);">
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. System Info & Limitations Modal -->
+  <div class="modal-overlay" id="sysInfoModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <i data-lucide="shield-alert" style="color: var(--primary);"></i>
+          <h3 class="modal-title">Prototype Architecture & Limitations</h3>
+        </div>
+        <button class="modal-close-btn" id="closeSysInfoModalBtn" aria-label="Close modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body" style="font-size: 0.85rem; line-height: 1.6; color: var(--text-muted);">
+        <p style="margin-bottom: 0.75rem; color: var(--text-main); font-weight: 600;">
+          Welcome to PettyFlow, an advanced client-side front-end web application.
+        </p>
+        <ul style="list-style: disc; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;">
+          <li><strong>Client-Side Storage:</strong> All settings and transaction entries are stored locally inside this browser using <code style="background:#f1f5f9; padding:2px 4px;">localStorage</code> and attachments inside <code style="background:#f1f5f9; padding:2px 4px;">IndexedDB</code>.</li>
+          <li><strong>Single-Device Isolation:</strong> Other employees or management cannot see your entries automatically unless you export your data or connect to a centralized backend.</li>
+          <li><strong>No Server-Side Authentication:</strong> Login simulations or user roles in this front-end prototype are for demonstrative interface workflows. It is not an enterprise access control system.</li>
+          <li><strong>Receipt Storage Quota:</strong> Large PDF and image uploads are stored in browser memory/IndexedDB for this demo. Clearing your browser cookies or cache will purge these files. Always keep originals or export JSON backups.</li>
+          <li><strong>Production Roadmap:</strong> Deploying this for full corporate use requires a secure server backend (e.g. Node.js / Python / Go), PostgreSQL/MySQL database, secure multi-tenant authentication, and S3 bucket storage for invoices.</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" id="sysInfoModalCloseBtn">Got it, thanks!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Main JavaScript File -->
+  <script src="script.js"></script>
+</body>
+</html>
